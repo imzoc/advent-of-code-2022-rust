@@ -1,6 +1,7 @@
 use std::fs::File;
 use std::io::{BufRead, BufReader, Write};
 
+// Handles the initialization of the stacks in the problem. This is manual work.
 fn create_stacks() -> Vec<Vec<char>> {
     let str_stacks:Vec<String> = vec![
         "NSDCVQT".to_string(),
@@ -22,15 +23,18 @@ fn create_stacks() -> Vec<Vec<char>> {
     char_stacks
 }
 
-fn move_crate(stacks: Vec<Vec<char>>, command: (i32, i32, i32)) -> Vec<Vec<char>> {
-    for n in 0..=command.0 {
-
+// Executes the moving of crates in one line of the input file.
+fn move_crate(stacks: &mut Vec<Vec<char>>, command: (i32, i32, i32)) {
+    for _n in 0..command.0 {
+        let c = stacks[command.1 as usize].pop().unwrap();
+        stacks[command.2 as usize].push(c);
     }
-
-
-    stacks
 }
 
+// Returns a command with three components that represent:
+// 1. How many crates to move;
+// 2. From which stack to move them from;
+// 3. And to which stack to move them to.
 fn parse_input_line(line: &str) -> (i32, i32, i32) {
     let mut parts: Vec<i32> = Vec::new();
     for word in line.split_whitespace() {
@@ -39,36 +43,41 @@ fn parse_input_line(line: &str) -> (i32, i32, i32) {
         }
     }
     
-    (parts[0], parts[1], parts[2])
+    (parts[0], parts[1] - 1, parts[2] - 1)
+}
+
+// Collects the top crate on each stack and returns them as a string.
+fn collect_top_crates(stacks: &Vec<Vec<char>>) -> String {
+    let mut r = String::new();
+    for n in 0..stacks.len() {
+        r.push(stacks[n][stacks[n].len() - 1])
+    }
+    
+    r
 }
 
 fn main() -> Result<(), std::io::Error> {
     let file_path = "adventofcode.com_2022_day_5_input.txt";
-    let stacks = create_stacks();
-    for row in &stacks {
-        println!("{:?}", row);
-    }
+    let mut stacks = create_stacks();
 
     // Open the input file
     let file = File::open(file_path)?;
     let reader = BufReader::new(file);
 
-    let starting_line = 12;
+    let starting_line = 11;
     for (line_number, line) in reader.lines().enumerate() {
         let line = line?;
         if line_number + 1 >= starting_line {
             let command = parse_input_line(&line);
-            let stacks = move_crate(stacks.clone(), command);         
+            move_crate(&mut stacks, command);         
         }
     }
 
-    // TODO: implement moving function and take the last crate from each stack as the answer.
-     
+    let answer = collect_top_crates(&stacks);
+
     let mut output_file = File::create("answer.txt")?;
-    for row in &stacks {
-        println!("{:?}", row);
-        writeln!(output_file, "{:?}", row)?;
-    }
+    println!("{}", answer);
+    writeln!(output_file, "{}", answer)?;
 
     Ok(())
 }
